@@ -1,0 +1,51 @@
+# Environment files
+.env
+.env.local
+.env.*.local
+**/.env
+**/.env.local
+**/.env.*.local
+
+# Node dependencies
+node_modules/
+**/node_modules/
+
+# Build and dist outputs
+dist/
+build/
+coverage/
+**/dist/
+**/build/
+**/coverage/
+
+# Hardhat artifacts/cache
+artifacts/
+cache/
+typechain-types/
+**/artifacts/
+**/cache/
+**/typechain-types/
+
+# Logs
+logs/
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# OS / editor files
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
+
+# Runtime and temporary files
+*.pid
+*.seed
+*.pid.lock
+*.out
+*.err
+*.tmp
+tmp/
+.temp/
