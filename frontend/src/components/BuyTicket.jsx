@@ -211,9 +211,13 @@ export default function BuyTicket({ walletAddress, onSuccess }) {
           }}
         >
           Tx:{" "}
-          <a href={getExplorerTxUrl(txHash)} target="_blank" rel="noreferrer">
-            {shortHash(txHash)}
-          </a>
+          {getExplorerTxUrl(txHash) ? (
+            <a href={getExplorerTxUrl(txHash)} target="_blank" rel="noreferrer">
+              {shortHash(txHash)}
+            </a>
+          ) : (
+            <span style={{ fontFamily: "monospace" }}>{shortHash(txHash)}</span>
+          )}
         </p>
       )}
 

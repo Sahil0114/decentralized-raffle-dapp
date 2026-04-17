@@ -5,19 +5,46 @@ require("dotenv").config();
 
 const { RPC_URL, PRIVATE_KEY, CONTRACT_ADDRESS } = process.env;
 
-if (!RPC_URL) {
-  throw new Error("Missing RPC_URL in environment");
+function readJsonIfExists(filePath) {
+  if (!fs.existsSync(filePath)) return null;
+  return JSON.parse(fs.readFileSync(filePath, "utf-8"));
 }
 
-if (!CONTRACT_ADDRESS) {
-  throw new Error("Missing CONTRACT_ADDRESS in environment");
+function loadDeployment() {
+  const candidatePaths = [
+    path.resolve(__dirname, "../abi/deployment.json"),
+    path.resolve(__dirname, "../../../blockchain/deployments/localhost/raffle.json"),
+    path.resolve(__dirname, "../../../../blockchain/deployments/localhost/raffle.json"),
+  ];
+
+  for (const filePath of candidatePaths) {
+    const parsed = readJsonIfExists(filePath);
+    if (parsed?.contractAddress) {
+      return parsed;
+    }
+  }
+
+  return null;
 }
 
-const provider = new ethers.JsonRpcProvider(RPC_URL);
-const signer = PRIVATE_KEY ? new ethers.Wallet(PRIVATE_KEY, provider) : null;
+const deployment = loadDeployment();
+const resolvedContractAddress = CONTRACT_ADDRESS || deployment?.contractAddress || "";
+const resolvedRpcUrl = RPC_URL || "http://127.0.0.1:8545";
+
+if (!resolvedContractAddress) {
+  throw new Error(
+    "Missing contract address. Set CONTRACT_ADDRESS or deploy locally with blockchain/scripts/deploy.js",
+  );
+}
+
+const provider = new ethers.JsonRpcProvider(resolvedRpcUrl);
+const signer = PRIVATE_KEY
+  ? new ethers.Wallet(PRIVATE_KEY, provider)
+  : provider.getSigner(0);
 
 function loadAbi() {
   const candidatePaths = [
+    path.resolve(__dirname, "../abi/Raffle.json"),
     path.resolve(
       __dirname,
       "../../../blockchain/artifacts/contracts/Raffle.sol/Raffle.json",
@@ -26,7 +53,7 @@ function loadAbi() {
       __dirname,
       "../../../../blockchain/artifacts/contracts/Raffle.sol/Raffle.json",
     ),
-    path.resolve(__dirname, "../../abi/Raffle.json"),
+    path.resolve(__dirname, "../../../frontend/src/constants/abi.json"),
   ];
 
   for (const filePath of candidatePaths) {
@@ -43,21 +70,14 @@ function loadAbi() {
 
 const abi = loadAbi();
 
-const readContract = new ethers.Contract(CONTRACT_ADDRESS, abi, provider);
-const adminContract = signer
-  ? new ethers.Contract(CONTRACT_ADDRESS, abi, signer)
-  : null;
+const readContract = new ethers.Contract(resolvedContractAddress, abi, provider);
+const adminContract = new ethers.Contract(resolvedContractAddress, abi, signer);
 
 function getProvider() {
   return provider;
 }
 
 function getSigner() {
-  if (!signer) {
-    throw new Error(
-      "Admin signer unavailable. Set PRIVATE_KEY in backend .env",
-    );
-  }
   return signer;
 }
 
@@ -66,20 +86,10 @@ function getReadContract() {
 }
 
 function getWriteContract() {
-  if (!adminContract) {
-    throw new Error(
-      "Write contract unavailable. Set PRIVATE_KEY in backend .env",
-    );
-  }
   return adminContract;
 }
 
 function getAdminContract() {
-  if (!adminContract) {
-    throw new Error(
-      "Admin contract unavailable. Set PRIVATE_KEY in backend .env",
-    );
-  }
   return adminContract;
 }
 
@@ -123,5 +133,5 @@ module.exports = {
   parseContractError,
   toEthString,
   abi,
-  CONTRACT_ADDRESS,
+  CONTRACT_ADDRESS: resolvedContractAddress,
 };

@@ -1,0 +1,9 @@
+{
+  "chainId": 31337,
+  "contractAddress": "",
+  "deployerAddress": "",
+  "ticketPriceWei": "0",
+  "maxParticipants": 0,
+  "deadlineTimestamp": 0,
+  "prizeInfo": ""
+}

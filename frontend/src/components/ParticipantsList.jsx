@@ -10,7 +10,7 @@ export default function ParticipantsList({ refreshKey = 0 }) {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
 
-  const backendBaseUrl = import.meta.env.VITE_BACKEND_BASE_URL || "";
+  const backendBaseUrl = import.meta.env.VITE_BACKEND_BASE_URL || "http://localhost:5000";
 
   useEffect(() => {
     let isMounted = true;
@@ -20,10 +20,6 @@ export default function ParticipantsList({ refreshKey = 0 }) {
       setError("");
 
       try {
-        if (!backendBaseUrl) {
-          throw new Error("Missing VITE_BACKEND_BASE_URL in frontend environment.");
-        }
-
         const response = await fetch(`${backendBaseUrl}/api/raffle/participants`, {
           method: "GET",
           headers: {

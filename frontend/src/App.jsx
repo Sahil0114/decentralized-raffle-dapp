@@ -5,8 +5,13 @@ import BuyTicket from "./components/BuyTicket";
 import ParticipantsList from "./components/ParticipantsList";
 import WinnerDisplay from "./components/WinnerDisplay";
 import AdminPanel from "./components/AdminPanel";
+import deployment from "./constants/deployment.json";
 
-const ADMIN_ADDRESS = (import.meta.env.VITE_ADMIN_ADDRESS || "").toLowerCase();
+const ADMIN_ADDRESS = (
+  import.meta.env.VITE_ADMIN_ADDRESS ||
+  deployment?.deployerAddress ||
+  ""
+).toLowerCase();
 
 export default function App() {
   const [walletAddress, setWalletAddress] = useState("");
@@ -17,8 +22,7 @@ export default function App() {
     [walletAddress]
   );
 
-  const isAdmin =
-    Boolean(ADMIN_ADDRESS) && Boolean(normalizedWallet) && normalizedWallet === ADMIN_ADDRESS;
+  const isAdmin = Boolean(normalizedWallet) && (!ADMIN_ADDRESS || normalizedWallet === ADMIN_ADDRESS);
 
   const triggerRefresh = () => setRefreshKey((prev) => prev + 1);
 

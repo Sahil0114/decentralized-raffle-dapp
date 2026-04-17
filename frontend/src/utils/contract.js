@@ -1,12 +1,20 @@
 import { BrowserProvider, Contract, ethers } from "ethers";
 import abi from "../constants/abi.json";
+import deployment from "../constants/deployment.json";
 
-const CONTRACT_ADDRESS = import.meta.env.VITE_CONTRACT_ADDRESS || "";
-const BACKEND_BASE_URL = (import.meta.env.VITE_BACKEND_BASE_URL || "").replace(
+const CONTRACT_ADDRESS =
+  import.meta.env.VITE_CONTRACT_ADDRESS || deployment?.contractAddress || "";
+const BACKEND_BASE_URL = (
+  import.meta.env.VITE_BACKEND_BASE_URL || "http://localhost:5000"
+).replace(
   /\/$/,
   "",
 );
-const RPC_URL = import.meta.env.VITE_RPC_URL || "";
+const RPC_URL = import.meta.env.VITE_RPC_URL || "http://127.0.0.1:8545";
+const CHAIN_ID = Number(import.meta.env.VITE_CHAIN_ID || deployment?.chainId || 0);
+const EXPLORER_BASE_URL =
+  import.meta.env.VITE_EXPLORER_BASE_URL ||
+  (CHAIN_ID === 11155111 ? "https://sepolia.etherscan.io" : "");
 
 /* ----------------------------- Config Helpers ----------------------------- */
 
@@ -25,9 +33,6 @@ function assertEthereum() {
 }
 
 function getBackendUrl(path) {
-  if (!BACKEND_BASE_URL) {
-    throw new Error("Missing VITE_BACKEND_BASE_URL in frontend environment.");
-  }
   return `${BACKEND_BASE_URL}${path.startsWith("/") ? path : `/${path}`}`;
 }
 
@@ -179,11 +184,11 @@ export function toEthString(value) {
 }
 
 export function getExplorerTxUrl(txHash) {
-  if (!txHash) return "";
-  return `https://sepolia.etherscan.io/tx/${txHash}`;
+  if (!txHash || !EXPLORER_BASE_URL) return "";
+  return `${EXPLORER_BASE_URL}/tx/${txHash}`;
 }
 
 export function getExplorerAddressUrl(address) {
-  if (!address) return "";
-  return `https://sepolia.etherscan.io/address/${address}`;
+  if (!address || !EXPLORER_BASE_URL) return "";
+  return `${EXPLORER_BASE_URL}/address/${address}`;
 }

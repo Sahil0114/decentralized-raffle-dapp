@@ -1,55 +1,70 @@
 require("dotenv").config();
 const { ethers } = require("hardhat");
+const fs = require("fs");
+const path = require("path");
 
 async function main() {
   const {
-    VRF_COORDINATOR_ADDRESS,
-    VRF_SUBSCRIPTION_ID,
-    VRF_GAS_LANE,
-    VRF_CALLBACK_GAS_LIMIT,
-    TICKET_PRICE_WEI,
-    MAX_PARTICIPANTS,
-    RAFFLE_DEADLINE_TIMESTAMP,
-    PRIZE_INFO,
+    TICKET_PRICE_WEI = ethers.utils.parseEther("0.01").toString(),
+    MAX_PARTICIPANTS = "100",
+    RAFFLE_DURATION_SECONDS = "3600",
+    PRIZE_INFO = "Local decentralized raffle prize pool",
   } = process.env;
 
-  if (!VRF_COORDINATOR_ADDRESS)
-    throw new Error("Missing VRF_COORDINATOR_ADDRESS");
-  if (!VRF_SUBSCRIPTION_ID) throw new Error("Missing VRF_SUBSCRIPTION_ID");
-  if (!VRF_GAS_LANE) throw new Error("Missing VRF_GAS_LANE");
-  if (!VRF_CALLBACK_GAS_LIMIT)
-    throw new Error("Missing VRF_CALLBACK_GAS_LIMIT");
-  if (!TICKET_PRICE_WEI) throw new Error("Missing TICKET_PRICE_WEI");
-  if (!MAX_PARTICIPANTS) throw new Error("Missing MAX_PARTICIPANTS");
-  if (!RAFFLE_DEADLINE_TIMESTAMP)
-    throw new Error("Missing RAFFLE_DEADLINE_TIMESTAMP");
-  if (!PRIZE_INFO) throw new Error("Missing PRIZE_INFO");
+  const latestBlock = await ethers.provider.getBlock("latest");
+  const deadlineTimestamp =
+    Number(latestBlock.timestamp) + Number(RAFFLE_DURATION_SECONDS);
 
   const raffleFactory = await ethers.getContractFactory("Raffle");
 
   const raffle = await raffleFactory.deploy(
-    VRF_COORDINATOR_ADDRESS,
-    VRF_SUBSCRIPTION_ID,
-    VRF_GAS_LANE,
-    VRF_CALLBACK_GAS_LIMIT,
     TICKET_PRICE_WEI,
     MAX_PARTICIPANTS,
-    RAFFLE_DEADLINE_TIMESTAMP,
+    deadlineTimestamp,
     PRIZE_INFO,
   );
 
   await raffle.deployed();
 
+  const artifactPath = path.resolve(
+    __dirname,
+    "../artifacts/contracts/Raffle.sol/Raffle.json",
+  );
+  const artifact = JSON.parse(fs.readFileSync(artifactPath, "utf-8"));
+  const deploymentMetadata = {
+    chainId: (await ethers.provider.getNetwork()).chainId,
+    contractAddress: raffle.address,
+    deployerAddress: (await ethers.getSigners())[0].address,
+    ticketPriceWei: String(TICKET_PRICE_WEI),
+    maxParticipants: Number(MAX_PARTICIPANTS),
+    deadlineTimestamp,
+    prizeInfo: PRIZE_INFO,
+  };
+
+  const deploymentTargets = [
+    path.resolve(__dirname, "../deployments/localhost/raffle.json"),
+    path.resolve(__dirname, "../../frontend/src/constants/deployment.json"),
+    path.resolve(__dirname, "../../backend/src/abi/deployment.json"),
+  ];
+
+  for (const target of deploymentTargets) {
+    fs.mkdirSync(path.dirname(target), { recursive: true });
+    fs.writeFileSync(target, JSON.stringify(deploymentMetadata, null, 2));
+  }
+
+  const abiTargets = [
+    path.resolve(__dirname, "../../frontend/src/constants/abi.json"),
+    path.resolve(__dirname, "../../backend/src/abi/Raffle.json"),
+  ];
+
+  for (const target of abiTargets) {
+    fs.mkdirSync(path.dirname(target), { recursive: true });
+    fs.writeFileSync(target, JSON.stringify(artifact.abi, null, 2));
+  }
+
   console.log(`Raffle deployed to: ${raffle.address}`);
-  console.log("Constructor params:");
-  console.log(`- VRF Coordinator: ${VRF_COORDINATOR_ADDRESS}`);
-  console.log(`- Subscription ID: ${VRF_SUBSCRIPTION_ID}`);
-  console.log(`- Gas Lane: ${VRF_GAS_LANE}`);
-  console.log(`- Callback Gas Limit: ${VRF_CALLBACK_GAS_LIMIT}`);
-  console.log(`- Ticket Price (wei): ${TICKET_PRICE_WEI}`);
-  console.log(`- Max Participants: ${MAX_PARTICIPANTS}`);
-  console.log(`- Deadline (timestamp): ${RAFFLE_DEADLINE_TIMESTAMP}`);
-  console.log(`- Prize Info: ${PRIZE_INFO}`);
+  console.log(`Deployer: ${deploymentMetadata.deployerAddress}`);
+  console.log("Local deployment metadata + ABI synced to frontend/backend.");
 }
 
 main()

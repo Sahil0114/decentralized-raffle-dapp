@@ -1,15 +1,11 @@
 import { useState } from "react";
+import { getExplorerTxUrl } from "../utils/contract";
 
 const BACKEND_BASE_URL = import.meta.env.VITE_BACKEND_BASE_URL || "http://localhost:5000";
 
 function shortHash(hash) {
   if (!hash) return "";
   return `${hash.slice(0, 10)}...${hash.slice(-8)}`;
-}
-
-function getExplorerTxUrl(txHash) {
-  if (!txHash) return "";
-  return `https://sepolia.etherscan.io/tx/${txHash}`;
 }
 
 export default function AdminPanel({ walletAddress, onSuccess }) {
@@ -99,9 +95,13 @@ export default function AdminPanel({ walletAddress, onSuccess }) {
       {txHash && (
         <p style={{ marginTop: 8, color: "#0f766e", fontSize: 14 }}>
           Transaction:{" "}
-          <a href={getExplorerTxUrl(txHash)} target="_blank" rel="noreferrer">
-            {shortHash(txHash)}
-          </a>
+          {getExplorerTxUrl(txHash) ? (
+            <a href={getExplorerTxUrl(txHash)} target="_blank" rel="noreferrer">
+              {shortHash(txHash)}
+            </a>
+          ) : (
+            <span style={{ fontFamily: "monospace" }}>{shortHash(txHash)}</span>
+          )}
         </p>
       )}
 
