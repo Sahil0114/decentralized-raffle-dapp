@@ -33,9 +33,6 @@ const resolvedRpcUrl = RPC_URL || "http://127.0.0.1:8545";
 const hasContractAddress = Boolean(resolvedContractAddress);
 
 const provider = new ethers.JsonRpcProvider(resolvedRpcUrl);
-const signer = PRIVATE_KEY
-  ? new ethers.Wallet(PRIVATE_KEY, provider)
-  : provider.getSigner(0);
 
 function loadAbi() {
   const candidatePaths = [
@@ -65,46 +62,41 @@ function loadAbi() {
 
 const abi = loadAbi();
 
-const readContract = hasContractAddress
-  ? new ethers.Contract(resolvedContractAddress, abi, provider)
-  : null;
-const adminContract = hasContractAddress
-  ? new ethers.Contract(resolvedContractAddress, abi, signer)
-  : null;
-
 function getProvider() {
   return provider;
 }
 
 function getSigner() {
-  return signer;
+  return PRIVATE_KEY
+    ? new ethers.Wallet(PRIVATE_KEY, provider)
+    : provider.getSigner(0);
 }
 
 function getReadContract() {
-  if (!readContract) {
+  if (!hasContractAddress) {
     throw new Error(
       "Contract not configured yet. Deploy locally first (blockchain npm run deploy:local) or set CONTRACT_ADDRESS.",
     );
   }
-  return readContract;
+  return new ethers.Contract(resolvedContractAddress, abi, provider);
 }
 
 function getWriteContract() {
-  if (!adminContract) {
+  if (!hasContractAddress) {
     throw new Error(
       "Contract not configured yet. Deploy locally first (blockchain npm run deploy:local) or set CONTRACT_ADDRESS.",
     );
   }
-  return adminContract;
+  return new ethers.Contract(resolvedContractAddress, abi, getSigner());
 }
 
 function getAdminContract() {
-  if (!adminContract) {
+  if (!hasContractAddress) {
     throw new Error(
       "Contract not configured yet. Deploy locally first (blockchain npm run deploy:local) or set CONTRACT_ADDRESS.",
     );
   }
-  return adminContract;
+  return new ethers.Contract(resolvedContractAddress, abi, getSigner());
 }
 
 function formatRaffleState(stateValue) {
