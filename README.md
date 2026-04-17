@@ -14,15 +14,15 @@ Local-first full-stack dApp for raffle ticketing with Solidity smart contracts.
 ### 1) Install dependencies
 
 ```bash
-cd /home/runner/work/decentralized-raffle-dapp/decentralized-raffle-dapp/blockchain && npm install
-cd /home/runner/work/decentralized-raffle-dapp/decentralized-raffle-dapp/backend && npm install
-cd /home/runner/work/decentralized-raffle-dapp/decentralized-raffle-dapp/frontend && npm install
+cd blockchain && npm install
+cd ../backend && npm install
+cd ../frontend && npm install
 ```
 
 ### 2) Start local blockchain node
 
 ```bash
-cd /home/runner/work/decentralized-raffle-dapp/decentralized-raffle-dapp/blockchain
+cd blockchain
 npm run node
 ```
 
@@ -31,7 +31,7 @@ npm run node
 In a new terminal:
 
 ```bash
-cd /home/runner/work/decentralized-raffle-dapp/decentralized-raffle-dapp/blockchain
+cd blockchain
 npm run deploy:local
 ```
 
@@ -45,14 +45,14 @@ This updates:
 ### 4) Start backend
 
 ```bash
-cd /home/runner/work/decentralized-raffle-dapp/decentralized-raffle-dapp/backend
+cd backend
 npm run dev
 ```
 
 ### 5) Start frontend
 
 ```bash
-cd /home/runner/work/decentralized-raffle-dapp/decentralized-raffle-dapp/frontend
+cd frontend
 npm run dev
 ```
 
@@ -93,3 +93,4 @@ Open the Vite URL shown in terminal, connect wallet to local chain, buy tickets,
 
 - This project is now optimized for local development first.
 - External testnet deployment is still possible by setting env vars manually.
+- Winner randomness now uses block data (`prevrandao` + timestamp), so `pickWinner` is restricted to local Hardhat chain (`chainId 31337`) to avoid unsafe production usage.

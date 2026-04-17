@@ -4,11 +4,12 @@ pragma solidity ^0.8.18;
 /**
  * @title Raffle
  * @notice Decentralized raffle contract with on-chain ticketing and winner selection
+ * @dev This local-first variant resolves winner selection synchronously in pickWinner(),
+ * so no intermediate CALCULATING state is needed.
  */
 contract Raffle {
     enum RaffleState {
         OPEN,
-        CALCULATING,
         CLOSED
     }
 
@@ -66,13 +67,15 @@ contract Raffle {
     function pickWinner() external {
         require(msg.sender == i_owner, "Only owner");
         require(s_raffleState == RaffleState.OPEN, "Raffle not open");
+        require(block.chainid == 31337, "Winner selection is local-chain only");
         require(
             block.timestamp >= i_deadline || s_participants.length == i_maxParticipants,
             "Raffle still ongoing"
         );
         require(s_participants.length > 0, "No participants");
 
-        s_raffleState = RaffleState.CALCULATING;
+        // NOTE: This entropy source is acceptable for local/test usage but not ideal for
+        // production high-value raffles because block data can be influenced by validators.
         uint256 winnerIndex = uint256(
             keccak256(
                 abi.encodePacked(block.prevrandao, block.timestamp, s_participants.length)

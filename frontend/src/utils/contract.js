@@ -11,7 +11,10 @@ const BACKEND_BASE_URL = (
   "",
 );
 const RPC_URL = import.meta.env.VITE_RPC_URL || "http://127.0.0.1:8545";
-const CHAIN_ID = Number(import.meta.env.VITE_CHAIN_ID || deployment?.chainId || 0);
+const rawChainId = import.meta.env.VITE_CHAIN_ID ?? deployment?.chainId ?? 31337;
+const parsedChainId = Number(rawChainId);
+const CHAIN_ID =
+  Number.isFinite(parsedChainId) && parsedChainId > 0 ? parsedChainId : 31337;
 const EXPLORER_BASE_URL =
   import.meta.env.VITE_EXPLORER_BASE_URL ||
   (CHAIN_ID === 11155111 ? "https://sepolia.etherscan.io" : "");
@@ -162,10 +165,11 @@ export async function triggerPickWinnerFromBackend() {
 /* ------------------------------- UI Helpers ------------------------------- */
 
 export function formatRaffleState(stateValue) {
+  const RAFFLE_STATE_OPEN = 0;
+  const RAFFLE_STATE_CLOSED = 1;
   const state = Number(stateValue);
-  if (state === 0) return "OPEN";
-  if (state === 1) return "CALCULATING";
-  if (state === 2) return "CLOSED";
+  if (state === RAFFLE_STATE_OPEN) return "OPEN";
+  if (state === RAFFLE_STATE_CLOSED) return "CLOSED";
   return `UNKNOWN(${stateValue})`;
 }
 

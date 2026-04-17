@@ -22,7 +22,10 @@ export default function App() {
     [walletAddress]
   );
 
-  const isAdmin = Boolean(normalizedWallet) && (!ADMIN_ADDRESS || normalizedWallet === ADMIN_ADDRESS);
+  const isAdmin =
+    Boolean(ADMIN_ADDRESS) &&
+    Boolean(normalizedWallet) &&
+    normalizedWallet === ADMIN_ADDRESS;
 
   const triggerRefresh = () => setRefreshKey((prev) => prev + 1);
 

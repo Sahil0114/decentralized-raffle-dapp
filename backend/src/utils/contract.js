@@ -67,9 +67,19 @@ function getProvider() {
 }
 
 function getSigner() {
-  return PRIVATE_KEY
-    ? new ethers.Wallet(PRIVATE_KEY, provider)
-    : provider.getSigner(0);
+  if (PRIVATE_KEY) {
+    return new ethers.Wallet(PRIVATE_KEY, provider);
+  }
+
+  const isLocalRpc =
+    resolvedRpcUrl.includes("127.0.0.1") || resolvedRpcUrl.includes("localhost");
+  if (isLocalRpc) {
+    return provider.getSigner(0);
+  }
+
+  throw new Error(
+    "Missing PRIVATE_KEY for non-local RPC signer. Set PRIVATE_KEY in backend environment.",
+  );
 }
 
 function getReadContract() {
@@ -100,10 +110,11 @@ function getAdminContract() {
 }
 
 function formatRaffleState(stateValue) {
+  const RAFFLE_STATE_OPEN = 0;
+  const RAFFLE_STATE_CLOSED = 1;
   const state = Number(stateValue);
-  if (state === 0) return "OPEN";
-  if (state === 1) return "CALCULATING";
-  if (state === 2) return "CLOSED";
+  if (state === RAFFLE_STATE_OPEN) return "OPEN";
+  if (state === RAFFLE_STATE_CLOSED) return "CLOSED";
   return `UNKNOWN(${state})`;
 }
 

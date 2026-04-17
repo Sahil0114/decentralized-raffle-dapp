@@ -3,15 +3,23 @@ const { ethers } = require("hardhat");
 const fs = require("fs");
 const path = require("path");
 
+const DEFAULT_TICKET_PRICE_WEI = ethers.utils.parseEther("0.01").toString();
+const DEFAULT_MAX_PARTICIPANTS = "100";
+const DEFAULT_RAFFLE_DURATION_SECONDS = "3600";
+const DEFAULT_PRIZE_INFO = "Local decentralized raffle prize pool";
+
 async function main() {
   const {
-    TICKET_PRICE_WEI = ethers.utils.parseEther("0.01").toString(),
-    MAX_PARTICIPANTS = "100",
-    RAFFLE_DURATION_SECONDS = "3600",
-    PRIZE_INFO = "Local decentralized raffle prize pool",
+    TICKET_PRICE_WEI = DEFAULT_TICKET_PRICE_WEI,
+    MAX_PARTICIPANTS = DEFAULT_MAX_PARTICIPANTS,
+    RAFFLE_DURATION_SECONDS = DEFAULT_RAFFLE_DURATION_SECONDS,
+    PRIZE_INFO = DEFAULT_PRIZE_INFO,
   } = process.env;
 
   const latestBlock = await ethers.provider.getBlock("latest");
+  if (!latestBlock) {
+    throw new Error("Failed to get latest block from provider");
+  }
   const deadlineTimestamp =
     Number(latestBlock.timestamp) + Number(RAFFLE_DURATION_SECONDS);
 

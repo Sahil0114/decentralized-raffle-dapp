@@ -12,6 +12,8 @@ describe("Raffle", function () {
   const ticketPrice = ethers.utils.parseEther("0.01");
   const maxParticipants = 3;
   const prizeInfo = "Winner takes ETH prize pool";
+  const RAFFLE_STATE_OPEN = 0;
+  const RAFFLE_STATE_CLOSED = 1;
 
   async function mineTo(timestamp) {
     await network.provider.send("evm_setNextBlockTimestamp", [timestamp]);
@@ -59,7 +61,7 @@ describe("Raffle", function () {
       expect((await raffle.getDeadline()).eq(deadline)).to.equal(true);
       expect(await raffle.getPrizeInfo()).to.equal(prizeInfo);
       expect((await raffle.getParticipantCount()).eq(0)).to.equal(true);
-      expect(Number(await raffle.getRaffleState())).to.equal(0);
+      expect(Number(await raffle.getRaffleState())).to.equal(RAFFLE_STATE_OPEN);
     });
   });
 
@@ -143,7 +145,7 @@ describe("Raffle", function () {
       await mineTo(deadline + 1);
 
       await raffle.connect(deployer).pickWinner();
-      expect(Number(await raffle.getRaffleState())).to.equal(2);
+      expect(Number(await raffle.getRaffleState())).to.equal(RAFFLE_STATE_CLOSED);
 
       await expectRevert(
         raffle.connect(player2).enterRaffle({ value: ticketPrice }),
@@ -186,7 +188,7 @@ describe("Raffle", function () {
       expect(winnerEvent).to.not.equal(undefined);
       expect(winnerEvent.args.winner).to.equal(player1.address);
 
-      expect(Number(await raffle.getRaffleState())).to.equal(2);
+      expect(Number(await raffle.getRaffleState())).to.equal(RAFFLE_STATE_CLOSED);
       expect(await raffle.getRecentWinner()).to.equal(player1.address);
     });
 
@@ -253,7 +255,7 @@ describe("Raffle", function () {
 
       expect((await raffle.getPrizePool()).eq(0)).to.equal(true);
       expect((await raffle.getParticipantCount()).eq(0)).to.equal(true);
-      expect(Number(await raffle.getRaffleState())).to.equal(2);
+      expect(Number(await raffle.getRaffleState())).to.equal(RAFFLE_STATE_CLOSED);
 
       expect(await raffle.hasEntered(player1.address)).to.equal(false);
       expect(await raffle.hasEntered(player2.address)).to.equal(false);
